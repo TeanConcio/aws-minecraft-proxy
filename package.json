@@ -8,14 +8,15 @@
     "license": "MIT",
     "private": true,
     "scripts": {
-        "start": "DBGLEVEL=info node --experimental-vm-modules src/index.js",
-        "test": "DBGLEVEL=warn node --experimental-vm-modules node_modules/.bin/jest"
+        "start": "cross-env DBGLEVEL=info node --experimental-vm-modules src/index.js",
+        "test": "cross-env DBGLEVEL=warn npx --node-options=--experimental-vm-modules jest --detectOpenHandles"
     },
     "dependencies": {
         "minecraft-protocol": "^1.60.1"
     },
     "devDependencies": {
         "@types/jest": "^26.0.16",
+        "cross-env": "^10.0.0",
         "jest": "^30.0.5"
     },
     "minecraft-aws": {
