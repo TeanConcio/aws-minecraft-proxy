@@ -16,6 +16,7 @@ if ( !config || !config.target || !config.commands )
 Add the following (and customize it):
 "minecraft-aws": ${JSON.stringify(
         {
+            proxy: { port: 25565 },
             target: { host: "<minecraft-server-ip>", port: 25565 },
             commands: {
                 start: "aws ec2 start-instances --instance-ids i-xxxxxxxxxxxxxxxxx",
@@ -25,6 +26,11 @@ Add the following (and customize it):
                 enabled: true,
                 path: "./whitelist.json"
             },
+            timeout: {
+                bootWait: 10,
+                shutdownWait: 3,
+                idleShutdown: 45
+            }
         },
         null,
         2
