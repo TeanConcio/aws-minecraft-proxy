@@ -49,6 +49,14 @@ export default class ProxyServer extends EventEmitter {
             time: Date.now(),
         };
 
+        // initialize the whitelist if enabled
+        this.whitelistFile = null;
+        if( ( config.whitelist.enabled || config.whitelist.enabled === 'true' ) && 
+            config.whitelist.path !== null && config.whitelist.path !== undefined && config.whitelist.path !== '' )
+        {
+            this.whitelistFile = ( config.whitelist.path.charAt(0) == '/' ? config.whitelist.path : path.join( __dirname, '..', config.whitelist.path ) );
+        }
+
         // create the server we use to intercept the pings
         this.server = mc.createServer({
             port: listenPort,
@@ -96,6 +104,9 @@ export default class ProxyServer extends EventEmitter {
                 // info("Stopping");
                 this.emit("stop");
                 break;
+            case STATES.unauthorized:
+                // info("Unauthorized");
+                this.emit("unauthorized");
         }
     }
 
@@ -151,49 +162,50 @@ export default class ProxyServer extends EventEmitter {
         });
     }
 
-    handleLogin(client) {
+    checkWhitelist(client_uuid) {
+        if( !( config.whitelist.enabled || config.whitelist.enabled === 'true' ) ) {
+            return true; // whitelist is not enabled, so allow all
+        }
+        else if( this.whitelistFile === null ) {
+            error("Whitelist is enabled, but no whitelist file is configured.");
+            return false; // whitelist is enabled, but no file is set
+        }
+        else {
+            try {
+                const whitelist = JSON.parse(
+                    fs.readFileSync( this.whitelistFile )
+                );
+                for (var index = 0; index < whitelist.length; ++index) {
 
-        if( config.whitelist.enabled )
-        {
-            const whitelistFile = ( config.whitelist.path.charAt(0) == '/' ? config.whitelist.path : path.join( __dirname, '..', config.whitelist.path ) );
-            const whitelist = JSON.parse(
-                fs.readFileSync( whitelistFile )
-            );
+                    var player = whitelist[index];
 
-            var isWhitelisted = false;
-
-            for (var index = 0; index < whitelist.length; ++index) {
-
-                var player = whitelist[index];
-
-                if( player.uuid === client.uuid ) {
-                    isWhitelisted = true;
-                    break;
+                    if( player.uuid === client_uuid ) {
+                        return true; // found the player in the whitelist
+                    }
                 }
-            }
-
-            if( isWhitelisted ) {
-                this.setState(STATES.starting);
-                info(
-                    `Player ${client.username} (${client.uuid}) connected, booting up the server...`
-                );
-                client.end("Booting the server now. Please reconnect once it's up.");
-            }
-            else {
-                this.setState(STATES.unauthorized);
-                info(
-                    `Player ${client.username} (${client.uuid}) is not authorized.`
-                );
-                client.end("You're not authorized to join this server.");   
+                return false; // player not found in the whitelist
+            } catch (err) {
+                error(`Failed to read or parse whitelist file: ${err.message}`);
+                return false; // failed to read or parse the whitelist file
             }
         }
-        else
-        {
+    }
+
+    handleLogin(client) {
+
+        if( this.checkWhitelist(client.uuid) ) {
             this.setState(STATES.starting);
             info(
                 `Player ${client.username} (${client.uuid}) connected, booting up the server...`
             );
             client.end("Booting the server now. Please reconnect once it's up.");
+        }
+        else {
+            this.setState(STATES.unauthorized);
+            info(
+                `Player ${client.username} (${client.uuid}) is not authorized.`
+            );
+            client.end("You're not authorized to join this server."); 
         }
     }
 
