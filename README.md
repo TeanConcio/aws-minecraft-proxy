@@ -60,7 +60,9 @@ Below is an example configuration.  **Bonus:** notice how the `shutdown` command
 {
     "minecraft-aws": {
         "proxy": {
-            "port": 25565
+            "port": 25565,
+            "online_mode": true,
+            "version": false
         },
         "target": {
             "host": "123.45.67.89",
@@ -71,13 +73,13 @@ Below is an example configuration.  **Bonus:** notice how the `shutdown` command
             "shutdown": "scp root@123.45.67.89:/opt/minecraft/server/whitelist.json ./whitelist.json && aws ec2 stop-instances --instance-ids i-xxxxxxxxxxxxxxxxx"
         },
         "whitelist": {
-            "enabled": "true",
+            "enabled": true,
             "path": "./whitelist.json"
         },
         "timeout": {
             "bootWait": 10,
             "shutdownWait": 3,
-            "idleWait": 45
+            "idleShutdown": 45
         }
     }
 }

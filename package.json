@@ -20,7 +20,9 @@
     },
     "minecraft-aws": {
         "proxy": {
-            "port": 25565
+            "port": 25565,
+            "online_mode": true,
+            "version": false
         },
         "target": {
             "host": "<minecraft-server-ip-or-hostname>",
@@ -31,7 +33,7 @@
             "shutdown": "aws ec2 stop-instances --instance-ids i-xxxxxxxxxxxxxxxxx"
         },
         "whitelist": {
-            "enabled": "true",
+            "enabled": true,
             "path": "./whitelist.json"
         },
         "timeout": {

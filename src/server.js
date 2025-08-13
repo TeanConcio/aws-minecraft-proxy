@@ -10,6 +10,7 @@ import stream from "stream";
 import Checker from "./checker.js";
 import { EventEmitter } from "events";
 import { silly, info, error } from "./debug.js";
+import { version } from "os";
 
 const STATES = {
     unknown: 0,
@@ -50,8 +51,9 @@ export default class ProxyServer extends EventEmitter {
 
         // create the server we use to intercept the pings
         this.server = mc.createServer({
-            "online-mode": true,
             port: listenPort,
+            "online-mode": config.proxy.online_mode || true,
+            version: config.proxy.version || false,
             keepAlive: false,
             beforePing: this.beforePing.bind(this),
             ...mcProtocolArgs,
@@ -151,7 +153,7 @@ export default class ProxyServer extends EventEmitter {
 
     handleLogin(client) {
 
-        if( config.whitelist.enabled == 'true' )
+        if( config.whitelist.enabled )
         {
             const whitelistFile = ( config.whitelist.path.charAt(0) == '/' ? config.whitelist.path : path.join( __dirname, '..', config.whitelist.path ) );
             const whitelist = JSON.parse(

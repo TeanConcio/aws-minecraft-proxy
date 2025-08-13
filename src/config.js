@@ -16,11 +16,18 @@ if ( !config || !config.target || !config.commands )
 Add the following (and customize it):
 "minecraft-aws": ${JSON.stringify(
         {
-            proxy: { port: 25565 },
-            target: { host: "<minecraft-server-ip>", port: 25565 },
+            proxy: {
+                port: 25565,
+                online_mode: true,
+                version: false
+            },
+            target: {
+                host: "<minecraft-server-ip-or-hostname>",
+                port: 25565
+            },
             commands: {
                 start: "aws ec2 start-instances --instance-ids i-xxxxxxxxxxxxxxxxx",
-                shutdown: "aws ec2 stop-instances --instance-ids i-xxxxxxxxxxxxxxxxx",
+                shutdown: "aws ec2 stop-instances --instance-ids i-xxxxxxxxxxxxxxxxx"
             },
             whitelist: {
                 enabled: true,
