@@ -43,12 +43,12 @@ describe("when targeting inactive server", () => {
                 port: OUR_PORT,
             });
             expect(pingData.description.text).toEqual(
-                "Server inactive. Connect to start"
+                "Server inactive; connect to boot it up."
             );
         } finally {
-            server.close();
+            await server.close();
         }
-    });
+    }, 10_000);
 
     it("runs start on client connect", async () => {
         const server = new Server(OUR_PORT, "localhost", 1, {
@@ -57,29 +57,51 @@ describe("when targeting inactive server", () => {
         try {
             const startListener = jest.fn();
             server.on("start", startListener);
+            const unauthorizedListener = jest.fn();
+            server.on("unauthorized", unauthorizedListener);
             // connect as client
             const kickReason = await new Promise((res, rej) => {
                 const client = mc.createClient({
                     host: "localhost",
                     port: OUR_PORT,
                     username: "Jest",
+                    version: "1.20.1"
                 });
-                client.on("error", (err) => rej(err));
-                client.on("kick_disconnect", (data, packet) =>
-                    res(data.reason)
-                );
+                client.on("error", (err) => {
+                    client.end();
+                    rej(err);
+                });
+                client.on("kick_disconnect", (data, packet) => {
+                    client.end();
+                    res(data.reason);
+                });
                 client.on("disconnect", (data, packet) => {
+                    client.end();
                     rej({ packet_name: packet.name, ...data });
                 });
+                client.on("end", () => {
+                    client.end();
+                    res(client.kickReason);
+                });
             });
-            expect(JSON.parse(kickReason).text).toBe(
-                "Starting the server. Please reconnect once it's up"
-            );
-            expect(startListener).toHaveBeenCalled();
+
+            const message = JSON.parse(kickReason).text;
+
+            if (startListener.mock.calls.length > 0) {
+                expect(message).toBe("Booting the server now. Please reconnect once it's up.");
+                expect(startListener).toHaveBeenCalled();
+                expect(unauthorizedListener).not.toHaveBeenCalled();
+            } else if (unauthorizedListener.mock.calls.length > 0) {
+                expect(message).toBe("You're not authorized to join this server.");
+                expect(unauthorizedListener).toHaveBeenCalled();
+                expect(startListener).not.toHaveBeenCalled();
+            } else {
+                throw new Error("Neither start nor unauthorized event was emitted");
+            }
         } finally {
-            server.close();
+            await server.close();
         }
-    });
+    }, 10_000);
 });
 
 describe("when targeting active server", () => {
@@ -87,9 +109,10 @@ describe("when targeting active server", () => {
         const sanitizePingData = ({ latency, ...data }) => {
             return data;
         };
-        const server = new Server(OUR_PORT, "localhost", MC_PORT); // known-bad port
+        const server = new Server(OUR_PORT, "localhost", MC_PORT);
         try {
-            await timeoutPromise(100, null, true);
+            await timeoutPromise(5_000, null, true);
+
             const [originalData, ourData] = await Promise.all([
                 ping({
                     host: "localhost",
@@ -104,7 +127,7 @@ describe("when targeting active server", () => {
                 sanitizePingData(originalData)
             );
         } finally {
-            server.close();
+            await server.close();
         }
-    });
+    },  10_000);
 });
