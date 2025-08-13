@@ -19,6 +19,9 @@
         "jest": "^26.6.3"
     },
     "minecraft-aws": {
+        "proxy": {
+            "port": 25565
+        },
         "target": {
             "host": "<minecraft-server-ip-or-hostname>",
             "port": 25565

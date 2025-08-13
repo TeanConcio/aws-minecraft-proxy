@@ -59,6 +59,9 @@ Below is an example configuration.  **Bonus:** notice how the `shutdown` command
 ```json
 {
     "minecraft-aws": {
+        "proxy": {
+            "port": 25565
+        },
         "target": {
             "host": "123.45.67.89",
             "port": 25565

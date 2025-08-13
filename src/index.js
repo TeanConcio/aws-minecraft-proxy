@@ -33,7 +33,7 @@ function executeCommand(name) {
     );
 }
 
-const server = new Server(25565, config.target.host, config.target.port);
+const server = new Server(config.proxy.port, config.target.host, config.target.port);
 server.on("start", () => {
     executeCommand("start");
 });
